@@ -1,0 +1,174 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: helmcharts.redhatcop.redhat.io
+spec:
+  group: redhatcop.redhat.io
+  names:
+    kind: HelmChart
+    listKind: HelmChartList
+    plural: helmcharts
+    singular: helmchart
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: Chart Repository
+      jsonPath: .spec.repositoryName
+      name: Repository
+      type: string
+    - description: Chart Name
+      jsonPath: .spec.name
+      name: Name
+      type: string
+    - description: Latest Chart Version
+      jsonPath: .spec.versions[*].version
+      name: Latest Version
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: HelmChart is the Schema for the helmcharts API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: HelmChartSpec defines the desired state of HelmChart
+            properties:
+              name:
+                type: string
+              repositoryDisplayName:
+                type: string
+              repositoryName:
+                type: string
+              versions:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    appVersion:
+                      type: string
+                    created:
+                      format: date-time
+                      type: string
+                    dependencies:
+                      items:
+                        properties:
+                          alias:
+                            description: Alias usable alias to be used for the chart
+                            type: string
+                          condition:
+                            description: A yaml path that resolves to a boolean, used
+                              for enabling/disabling charts (e.g. subchart1.enabled
+                              )
+                            type: string
+                          enabled:
+                            description: Enabled bool determines if chart should be
+                              loaded
+                            type: boolean
+                          name:
+                            description: "Name is the name of the dependency. \n This
+                              must mach the name in the dependency's Chart.yaml."
+                            type: string
+                          repository:
+                            description: "The URL to the repository. \n Appending
+                              `index.yaml` to this string should result in a URL that
+                              can be used to fetch the repository index."
+                            type: string
+                          tags:
+                            description: Tags can be used to group charts for enabling/disabling
+                              together
+                            items:
+                              type: string
+                            type: array
+                          version:
+                            description: "Version is the version (range) of this chart.
+                              \n A lock file will always produce a single version,
+                              while a dependency may contain a semantic version range."
+                            type: string
+                        required:
+                        - name
+                        - repository
+                        type: object
+                      type: array
+                    description:
+                      type: string
+                    digest:
+                      type: string
+                    home:
+                      type: string
+                    icon:
+                      type: string
+                    keyword:
+                      items:
+                        type: string
+                      type: array
+                    kubeVersion:
+                      type: string
+                    maintainers:
+                      items:
+                        properties:
+                          email:
+                            type: string
+                          name:
+                            type: string
+                          url:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      type: array
+                    sources:
+                      items:
+                        type: string
+                      type: array
+                    type:
+                      type: string
+                    urls:
+                      items:
+                        type: string
+                      type: array
+                    version:
+                      type: string
+                  required:
+                  - apiVersion
+                  - version
+                  type: object
+                type: array
+            required:
+            - name
+            - repositoryName
+            - versions
+            type: object
+          status:
+            description: HelmChartStatus defines the observed state of HelmChart
+            properties:
+              lastUpdateTimestamp:
+                format: date-time
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

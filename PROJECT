@@ -1,0 +1,23 @@
+domain: redhat.io
+layout: go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: helm-chart-repository-operator
+repo: github.com/redhat-cop/helm-chart-repository-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: redhat.io
+  group: redhatcop
+  kind: HelmChart
+  path: github.com/redhat-cop/helm-chart-repository-operator/api/v1alpha1
+  version: v1alpha1
+- controller: true
+  domain: redhat.io
+  group: redhatcop
+  kind: HelmChartRepository
+  version: v1alpha1
+version: "3"
