@@ -1,4 +1,4 @@
-# helm-chart-repository-operator
+# Helm Chart Repository Operator
 
 Operator that exposes [Helm](https://helm.sh) charts contained within Repositories declared on an OpenShift environment.
 
