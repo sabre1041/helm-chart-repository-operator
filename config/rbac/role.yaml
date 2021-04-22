@@ -7,41 +7,6 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - redhatcop.redhat.io
-  resources:
-  - helmchartrepositories
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - redhatcop.redhat.io
-  resources:
-  - helmchartrepositories/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - redhatcop.redhat.io
-  resources:
-  - helmchartrepositories/status
-  verbs:
-  - get
-  - patch
-  - update
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  creationTimestamp: null
-  name: manager-role
-  namespace: openshift-config
-rules:
-- apiGroups:
   - ""
   resources:
   - configmaps
@@ -57,3 +22,43 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - helm.openshift.io
+  resources:
+  - helmchartrepositories
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - helm.openshift.io
+  resources:
+  - helmchartrepositories/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - helmcharts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - helmcharts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - redhatcop.redhat.io
+  resources:
+  - helmcharts/status
+  verbs:
+  - get
+  - patch
+  - update

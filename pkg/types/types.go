@@ -9,4 +9,5 @@ type HelmChartEntry struct {
 	Name          string
 	Repository    *helmv1beta1.HelmChartRepository
 	ChartVersions repo.ChartVersions
+	ServerVersion string
 }

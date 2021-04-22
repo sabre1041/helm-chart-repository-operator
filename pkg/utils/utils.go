@@ -7,6 +7,7 @@ import (
 
 	redhatcopv1alpha1 "github.com/redhat-cop/helm-chart-repository-operator/api/v1alpha1"
 	"github.com/redhat-cop/helm-chart-repository-operator/pkg/types"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/repo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -93,6 +94,12 @@ func MapToHelmChart(helmChartEntry *types.HelmChartEntry) (*redhatcopv1alpha1.He
 
 	if helmChartEntry.ChartVersions != nil {
 		for _, chartVersion := range helmChartEntry.ChartVersions {
+
+			if chartVersion.Metadata != nil && chartVersion.Metadata.KubeVersion != "" && helmChartEntry.ServerVersion != "" {
+				if !chartutil.IsCompatibleRange(chartVersion.Metadata.KubeVersion, helmChartEntry.ServerVersion) {
+					continue
+				}
+			}
 
 			helmChartVersion, err := mapToHelmChartVersion(chartVersion)
 

@@ -4,14 +4,13 @@ go 1.15
 
 require (
 	github.com/go-logr/logr v0.3.0
-	github.com/onsi/ginkgo v1.14.1
-	github.com/onsi/gomega v1.10.2
 	github.com/openshift/api v0.0.0-20210202165416-a9e731090f5e
 	github.com/redhat-cop/operator-utils v1.1.0
 	helm.sh/helm/v3 v3.5.0
 	k8s.io/api v0.20.1 //ct
 	k8s.io/apimachinery v0.20.1
 	k8s.io/client-go v0.20.1
+	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/controller-runtime v0.7.0
 	sigs.k8s.io/yaml v1.2.0
 )

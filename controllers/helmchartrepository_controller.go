@@ -58,13 +58,16 @@ type HelmChartRepositoryReconciler struct {
 	util.ReconcilerBase
 	Log             logr.Logger
 	ReconcilePeriod int
+	ServerVersion   string
 }
 
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=helmchartrepositories,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=helmchartrepositories/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=helmchartrepositories/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",namespace=openshift-config,resources=secrets,verbs=get;list;watch
-// +kubebuilder:rbac:groups="",namespace=openshift-config,resources=configmaps,verbs=get;list;watch
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=helmcharts,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=helmcharts/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=redhatcop.redhat.io,resources=helmcharts/finalizers,verbs=update
+//+kubebuilder:rbac:groups=helm.openshift.io,resources=helmchartrepositories,verbs=get;list;watch
+//+kubebuilder:rbac:groups=helm.openshift.io,resources=helmchartrepositories/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
 
 func (r *HelmChartRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("helmchartrepository", req.NamespacedName)
@@ -133,7 +136,7 @@ func (r *HelmChartRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.
 
 		for chartName, versions := range indexFile.Entries {
 
-			helmChart, err := utils.MapToHelmChart(&types.HelmChartEntry{Name: chartName, Repository: instance, ChartVersions: versions})
+			helmChart, err := utils.MapToHelmChart(&types.HelmChartEntry{Name: chartName, Repository: instance, ChartVersions: versions, ServerVersion: r.ServerVersion})
 
 			if err != nil {
 				r.Log.Error(err, "Failed to map to Helm Chart")
@@ -167,6 +170,21 @@ func (r *HelmChartRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *HelmChartRepositoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
+
+	discoveryClient, err := r.GetDiscoveryClient()
+
+	if err != nil {
+		return err
+	}
+
+	serverVersion, err := discoveryClient.ServerVersion()
+
+	if err != nil {
+		return err
+	}
+
+	r.ServerVersion = serverVersion.String()
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&helmv1beta1.HelmChartRepository{}).
 		Complete(r)
