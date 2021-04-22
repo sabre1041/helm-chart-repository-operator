@@ -1,4 +1,4 @@
-# helm-chart-repository-operator
+# Helm Chart Repository Operator
 
 Operator that exposes [Helm](https://helm.sh) charts contained within Repositories declared on an OpenShift environment.
 
@@ -8,12 +8,12 @@ Execute the following command to install and deploy the operator:
 
 ```shell
 make install
-make deploy
+make deploy IMG=quay.io/ablock/helm-chart-repository-operator:latest
 ```
 
 Once the operator has had a chance to reconcile, the list of Helm Charts will be available as shown below:
 
-```
+```shell
 oc get helmcharts
 
 NAME                                               REPOSITORY         NAME                              LATEST VERSION
