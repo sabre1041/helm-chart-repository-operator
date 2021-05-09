@@ -1,0 +1,98 @@
+name: push
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: build
+    steps:
+      - name: set repo name
+        shell: bash
+        env:
+          QUAY_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
+        run: |
+          DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
+          echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" |tee -a $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-$DEFAULT_QUAY_REGISTRY}" |tee -a $GITHUB_ENV
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Download operator sdk
+        shell: bash
+        env:
+          RELEASE_VERSION: v1.5.0
+        run: |
+          curl -LO https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk_linux_amd64
+          chmod +x operator-sdk_linux_amd64
+          mkdir ${HOME}/bin
+          mv operator-sdk_linux_amd64 ${HOME}/bin/operator-sdk
+          echo "${HOME}/bin" |tee -a $GITHUB_PATH
+      - name: Get the version for tags
+        id: get_version1
+        if: "startsWith(github.ref, 'refs/tags')"
+        shell: bash
+        run: |
+          echo "OPERATOR_IMAGE_TAG=${GITHUB_REF/refs\/tags\//}" |tee -a $GITHUB_ENV
+          echo "BUNDLE_IMAGE_TAG=${GITHUB_REF/refs\/tags\//}" |tee -a $GITHUB_ENV
+          export TAG=${GITHUB_REF/refs\/tags\//}
+          echo "BUNDLE_VERSION=${TAG:1}" |tee -a $GITHUB_ENV
+          # Checking Semantic Versioning using official guide here: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string .
+          SEMANTICREGEX='^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+          export SEMVER_COMPLIANT=$(echo ${TAG:1} | grep -Po $SEMANTICREGEX)
+          if [ -z "$SEMVER_COMPLIANT" ]; then   echo "invalid semver tag ${GITHUB_REF/refs\/tags\//}"; exit 1; fi
+      - name: Get most recent tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+        if: "! startsWith(github.ref, 'refs/tags')"
+        with:
+          semver_only: true
+
+      - uses: actions-ecosystem/action-bump-semver@v1
+        id: bump-semver
+        if: "! startsWith(github.ref, 'refs/tags')"
+        with:
+          current_version: ${{ steps.get-latest-tag.outputs.tag }}
+          level: patch
+
+      - name: Get the version for push
+        id: get_version2
+        if: "! startsWith(github.ref, 'refs/tags')"
+        shell: bash
+        run: |
+          export BUNDLE_VERSION=${{ steps.bump-semver.outputs.new_version }}
+          echo "OPERATOR_IMAGE_TAG=latest" |tee -a $GITHUB_ENV
+          echo "BUNDLE_IMAGE_TAG=latest" |tee -a $GITHUB_ENV
+          echo "BUNDLE_VERSION=${BUNDLE_VERSION:1}" |tee -a $GITHUB_ENV
+      - name: build code
+        run: make build
+        shell: bash
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io/${{ env.QUAY_REGISTRY }}
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: "Build and Push Operator Image"
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: "quay.io/${{ env.QUAY_REGISTRY }}:latest,quay.io/${{ env.QUAY_REGISTRY }}:${{ env.OPERATOR_IMAGE_TAG }}"

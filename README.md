@@ -1,5 +1,7 @@
 # Helm Chart Repository Operator
 
+[![Build Status](https://github.com/sabre1041/helm-chart-repository-operator/workflows/push/badge.svg?branch=main)](https://github.com/sabre1041/helm-chart-repository-operator/actions?workflow=push)
+
 Operator that exposes [Helm](https://helm.sh) charts contained within Repositories declared on an OpenShift environment.
 
 ## Installation
